@@ -1,4 +1,4 @@
-import time
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from decouple import config
 
+LOGIN = config('LOGIN')
 PSWRD = config('PASSWORD')
  
 options = Options()
@@ -43,14 +44,25 @@ def collectBookQuotes():
     library.append(bookQuotes)
   return library
 
+def printQuotes(library):
+  for bookObj in library:
+    print(bookObj['title'])
+    print("------------------------------\n")
+    for idx,quote in enumerate(bookObj['quotes']):
+      print(str(idx+1) + '- ' + quote + '\n')
 
 loginAmazon('danielbcuadros@gmail.com', PSWRD)
 
 wait = WebDriverWait(driver,50)
 element = wait.until(EC.visibility_of_element_located((By.TAG_NAME,'h1')))
 library = collectBookQuotes()
-print(library)
+
+# with open("quotes.json","w") as outfile:
+#   json.dump(library, outfile)
+
+# file = open("quotes.txt","w+")
+# file.write(library)
+# file.close()
+printQuotes(library)
 driver.implicitly_wait(10)
 driver.close()
-
-
