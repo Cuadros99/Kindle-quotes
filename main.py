@@ -13,7 +13,7 @@ LOGIN = config('LOGIN')
 PSWRD = config('PASSWORD')
  
 options = Options()
-# options.add_argument('--headless')
+options.add_argument('--headless')
 # options.add_argument('--no-sandbox')
 # options.add_argument('--disable-dev-shm-usage')
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -27,42 +27,45 @@ def loginAmazon(email, password):
   login = driver.find_element(By.ID,'signInSubmit').click()
 
 def collectBookQuotes():
-  library = []
+  highlightsList = []
   books = driver.find_elements(By.TAG_NAME,'h2')
   # Create an dictionary for each book
   for book in books:
-    bookQuotes = {
-      'title': book.text,
-      'quotes': []
+    quoteObject = {
+      'book': book.text,
+      'text': ""
     }
     book.click()
     WebDriverWait(driver,50).until(EC.visibility_of_element_located((By.TAG_NAME,'h3')))
     quotesElements = driver.find_elements(By.ID,'highlight')
     # Create a list with all book's quotes
     for quote in quotesElements:
-      bookQuotes['quotes'].append(quote.text)
-    library.append(bookQuotes)
-  return library
+      divElement = quote.find_element(By.XPATH, '..')
+      quoteObject = {
+        'book': book.text,
+        'text': quote.text,
+        'quoteId': divElement.id
+      }
+      highlightsList.append(quoteObject)
+  return highlightsList
 
-def printQuotes(library):
-  for bookObj in library:
-    print(bookObj['title'])
+def printQuotes(highlightsList):
+  for quoteObj in highlightsList:
+    print("\"" + quoteObj['text'] + "\" - " + quoteObj['book'] + " - (" + quoteObj['quoteId'] + ")")
     print("------------------------------\n")
-    for idx,quote in enumerate(bookObj['quotes']):
-      print(str(idx+1) + '- ' + quote + '\n')
+
+def exportJSON(highlightsList):
+  with open("highlights.json","w") as outfile:
+    json.dump(highlightsList, outfile)
 
 loginAmazon('danielbcuadros@gmail.com', PSWRD)
 
 wait = WebDriverWait(driver,50)
 element = wait.until(EC.visibility_of_element_located((By.TAG_NAME,'h1')))
-library = collectBookQuotes()
+highlightsList = collectBookQuotes()
 
-# with open("quotes.json","w") as outfile:
-#   json.dump(library, outfile)
+# exportJSON(highlightsList)
 
-# file = open("quotes.txt","w+")
-# file.write(library)
-# file.close()
-printQuotes(library)
+printQuotes(highlightsList)
 driver.implicitly_wait(10)
 driver.close()
