@@ -1,5 +1,6 @@
 # dependencies
 venv/
-
+token.json
+credentials.json
 
 /.env
